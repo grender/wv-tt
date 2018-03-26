@@ -1,4 +1,5 @@
-import com.github.grender.wv_tt.Balance
+package com.github.grender.wv_tt
+
 import org.scalatest.FlatSpec
 
 class BalanceTest extends FlatSpec {
@@ -14,11 +15,11 @@ class BalanceTest extends FlatSpec {
 
     b.reduce(5)
     assert(b.get==5)
+  }
 
-    val exception = intercept[Exception] {
-      b.reduce(6)
-    }
-    assert(exception.getMessage.startsWith("Can't reduce to value"))
+  it should "correct check equals" in {
+    assert(new Balance(1)==new Balance(1))
+    assert(new Balance(1)!=new Balance(2))
   }
 
 }
