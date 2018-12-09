@@ -1,22 +1,29 @@
 package com.github.grender.wv_tt
 
-import scala.collection.mutable
+import com.github.grender.wv_tt.Exchange.{ClientAssets, FullState}
+import com.typesafe.scalalogging.StrictLogging
+
 import scala.io.Source
 
-object Main extends App {
+object Main extends App with StrictLogging {
 
-  val sellOrderStorage = new SellOrderStorage
-  val buyOrderStorage = new BuyOrderStorage
+  import cats.syntax.all._
 
-  val clients = FileUtils.loadClients(Source.fromFile("clients.txt")).toList
-  FileUtils.loadOrders(Source.fromFile("orders.txt")).foreach(order => {
-    order.orderType match {
-      case OrderType.Sell => sellOrderStorage.add(order)
-      case OrderType.Buy => buyOrderStorage.add(order)
-      case _ => new Exception("Invalid state")
+  val orderStorage = FileUtils.loadOrders(Source.fromFile("orders.txt"))
+  val clients      = FileUtils.loadClients(Source.fromFile("clients.txt"))
+  val buyOrders    = orderStorage.buyOrders
+  val sellOrders   = orderStorage.sellOrders
+  val startState = ProcessingStepState(
+    clientAssets = clients,
+    sellOrders = sellOrders
+  )
+
+  val statesChain = buyOrders
+    .foldLeft(ClientAssets(Seq()).pure[FullState]) {
+      case (state, buyOrder) =>
+        state.flatMap(_ => Exchange.updateState(buyOrder))
     }
-  })
 
-  TradeRunner.run(clients, buyOrderStorage, sellOrderStorage)
-  FileUtils.writeClientsResult("result.txt",clients)
+  val result = statesChain.runA(startState).value
+  FileUtils.writeClientsResult("result.txt", result)
 }
