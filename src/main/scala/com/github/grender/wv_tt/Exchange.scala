@@ -1,11 +1,10 @@
 package com.github.grender.wv_tt
 
 import cats.data.State
-import com.typesafe.scalalogging.StrictLogging
 
 import scala.annotation.tailrec
 
-object Exchange extends StrictLogging {
+object Exchange {
   val EmptyAssets = Assets(0,
                            Map(
                              Shares.A -> 0,
@@ -19,10 +18,9 @@ object Exchange extends StrictLogging {
 
   type FullState[T] = State[ProcessingStepState, T]
 
-  def updateState(buyOrder: Order): FullState[ClientAssets] =
+  def updateState(buyOrder: Order): FullState[ClientAssets] = {
     State[ProcessingStepState, ClientAssets] { oldState =>
       {
-        logger.info("start getting new state for order: {}", buyOrder)
         val (sellOrderO, remainSellOrders) =
           foundSellOrder(oldState.clientAssets, buyOrder, oldState.sellOrders)
         sellOrderO match {
@@ -50,6 +48,7 @@ object Exchange extends StrictLogging {
         }
       }
     }
+  }
 
   def foundSellOrder(
       clients: ClientAssets,
@@ -76,17 +75,18 @@ object Exchange extends StrictLogging {
 
           if (sellerAssets.shares(sellOrder.share) >= sellOrder.sharesCount
               && buyerAssets.usd >= sellOrder.fullPrice) {
-            (Some(sellOrder), filteredSellOrders ::: remainSellOrders)
+            (Some(sellOrder), remainSellOrders ::: filteredSellOrders)
           } else {
-            iteration(remainSellOrders, filteredSellOrders :+ sellOrder)
+            iteration(remainSellOrders, sellOrder :: filteredSellOrders)
           }
         } else {
-          iteration(remainSellOrders, filteredSellOrders :+ sellOrder)
+          iteration(remainSellOrders, sellOrder :: filteredSellOrders)
         }
       }
     }
 
-    iteration(sellOrders, List())
+    val (orderResult, filteredSellOrders) = iteration(sellOrders, List())
+    (orderResult, filteredSellOrders.reverse) //TODO: perfomance issue
   }
 
   def addShareAndUsdToAsset(assets: Assets,

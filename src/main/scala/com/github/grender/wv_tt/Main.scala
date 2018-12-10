@@ -18,12 +18,26 @@ object Main extends App with StrictLogging {
     sellOrders = sellOrders
   )
 
+  println(s"""
+      |Buy orders count : ${buyOrders.length}
+      |Sell orders count: ${sellOrders.length}
+      |
+      |Starting process...""".stripMargin)
+
   val statesChain = buyOrders
     .foldLeft(ClientAssets(Seq()).pure[FullState]) {
       case (state, buyOrder) =>
         state.flatMap(_ => Exchange.updateState(buyOrder))
     }
 
-  val result = statesChain.runA(startState).value
+  val (state, result) = statesChain.run(startState).value
+
+  println(s"""
+      |Finish!
+      |
+      |Successful trades: ${state.trades.length}
+      |Buy order without sell order: ${state.buyOrderWithoutSeller.length}
+    """.stripMargin)
   FileUtils.writeClientsResult("result.txt", result)
+  println("Written to result.txt")
 }

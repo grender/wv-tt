@@ -55,7 +55,8 @@ object FileUtils {
     source.getLines.map(_.split("\t"))
 
   def getClientFileContent(clientAssets: ClientAssets) =
-    clientAssets
+    clientAssets.toList
+      .sortBy(_._1)
       .map({
         case (clientName, assets) =>
           List(

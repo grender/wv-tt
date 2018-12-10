@@ -48,11 +48,13 @@ class FileUtilsTest extends FlatSpec with MustMatchers {
   it should "get correct file content for assets" in {
     val inputAssets = Map(
       "C1" -> assets(usd = 30, 1, 2, 3, 4),
-      "C2" -> assets(usd = 5, 10, 20, 30, 40)
+      "C3" -> assets(usd = 5, 10, 20, 30, 40),
+      "C2" -> assets(usd = 1, 2, 3, 4, 5)
     )
     val content = FileUtils.getClientFileContent(inputAssets)
-    val correct = "C1 30 1 2 3 4\n".replace(" ","\t") +
-                    "C2 5 10 20 30 40".replace(" ","\t")
+    val correct = "C1 30 1 2 3 4\n".replace(" ", "\t") +
+      "C2 1 2 3 4 5\n".replace(" ", "\t") +
+      "C3 5 10 20 30 40".replace(" ", "\t")
     content mustBe correct
   }
 }
