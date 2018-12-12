@@ -36,7 +36,7 @@ object FileUtils {
         }
       }
 
-  def loadClients(source: Source) =
+  def loadClients(source: Source): Exchange.ClientAssets =
     getLineDelemiteredByTab(source)
       .map({
         case Array(name, usdBalance, aBalance, bBalance, cBalance, dBalance) =>

@@ -28,4 +28,4 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % scalatestVersion % "test"
 )
 
-coverageEnabled := true
+//coverageEnabled := true
