@@ -3,6 +3,7 @@ package com.github.grender.wv_tt
 import java.util.UUID
 
 import com.github.grender.wv_tt.Exchange.ProcessingStepState
+import com.github.grender.wv_tt.exchanges._
 import org.scalatest.{FlatSpec, MustMatchers}
 import org.scalatest.Matchers._
 
@@ -65,8 +66,12 @@ class ExchangeTest extends FlatSpec with MustMatchers {
   runOnExchange[Vector](new VectorRecursiveExchange, _.toVector, a => a.toList)
   runOnExchange[List](new ListRecursiveExchange, a => a, a => a)
   runOnExchange[List](new ListSpanExchange, a => a, a => a)
-  runOnExchange[ArrayBuffer](new ArrayBufferIterateExchange,d=>ArrayBuffer(d.toArray:_*),_.toList)
-  runOnExchange[mutable.Buffer](new BufferIterateExchange,d=>mutable.Buffer(d:_*), _.toList)
+  runOnExchange[ArrayBuffer](new ArrayBufferIterateExchange,
+                             d => ArrayBuffer(d.toArray: _*),
+                             _.toList)
+  runOnExchange[mutable.Buffer](new BufferIterateExchange,
+                                d => mutable.Buffer(d: _*),
+                                _.toList)
 
   def runOnExchange[T[_]](exchange: AbstractExchange[T],
                           toT: List[Order] => T[Order],
@@ -111,7 +116,12 @@ class ExchangeTest extends FlatSpec with MustMatchers {
       val (Some(foundOrder), otherSellOrders) =
         exchange.foundSellOrder(inputAssets, buyOrder, toT(sellOrders))
       foundOrder.uuid.toString mustBe "00000000-0000-0000-0000-000000000002"
-      toList(otherSellOrders).map((order: Order) => order.uuid.toString) should contain inOrderElementsOf List("00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000003", "00000000-0000-0000-0000-000000000004")
+      toList(otherSellOrders).map((order: Order) => order.uuid.toString) should contain inOrderElementsOf List(
+        "00000000-0000-0000-0000-000000000000",
+        "00000000-0000-0000-0000-000000000001",
+        "00000000-0000-0000-0000-000000000003",
+        "00000000-0000-0000-0000-000000000004"
+      )
     }
 
     it should "not found order and return" in {

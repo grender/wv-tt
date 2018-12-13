@@ -27,5 +27,3 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % logbackClassicVersion,
   "org.scalatest" %% "scalatest" % scalatestVersion % "test"
 )
-
-coverageEnabled := true
