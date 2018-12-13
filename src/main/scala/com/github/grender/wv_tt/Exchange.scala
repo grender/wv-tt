@@ -2,8 +2,6 @@ package com.github.grender.wv_tt
 
 import cats.data.State
 
-import scala.annotation.tailrec
-
 object Exchange {
   val EmptyAssets = Assets(0,
                            Map(
@@ -50,43 +48,42 @@ object Exchange {
     }
   }
 
+  def isCorrectBuySellOrderPair(clients: ClientAssets,
+                                buyOrder: Order,
+                                sellOrder: Order): Boolean = {
+    if (buyOrder.share == sellOrder.share
+        && buyOrder.pricePerOne == sellOrder.pricePerOne
+        && buyOrder.sharesCount == sellOrder.sharesCount
+        && buyOrder.clientName != sellOrder.clientName) {
+      val buyerAssets  = clients.getOrElse(buyOrder.clientName, EmptyAssets)
+      val sellerAssets = clients.getOrElse(sellOrder.clientName, EmptyAssets)
+
+      if (sellerAssets.shares(sellOrder.share) >= sellOrder.sharesCount
+          && buyerAssets.usd >= sellOrder.fullPrice) {
+        true
+      } else {
+        false
+      }
+    } else {
+      false
+    }
+  }
+
   def foundSellOrder(
       clients: ClientAssets,
       buyOrder: Order,
       sellOrders: List[Order]
   ): (Option[Order], List[Order]) = {
 
-    @tailrec
-    def iteration(
-        sellOrders: List[Order],
-        filteredSellOrders: List[Order]
-    ): (Option[Order], List[Order]) = {
-      if (sellOrders == Nil) (None, filteredSellOrders)
-      else {
-        val sellOrder        = sellOrders.head
-        val remainSellOrders = sellOrders.tail
-        if (buyOrder.share == sellOrder.share
-            && buyOrder.pricePerOne == sellOrder.pricePerOne
-            && buyOrder.sharesCount == sellOrder.sharesCount
-            && buyOrder.clientName != sellOrder.clientName) {
-          val buyerAssets = clients.getOrElse(buyOrder.clientName, EmptyAssets)
-          val sellerAssets =
-            clients.getOrElse(sellOrder.clientName, EmptyAssets)
+    val (nonSuitableOrders, foundSellOrderAndOtherOrders) =
+      sellOrders.span(sellOrder =>
+        !isCorrectBuySellOrderPair(clients, buyOrder, sellOrder))
 
-          if (sellerAssets.shares(sellOrder.share) >= sellOrder.sharesCount
-              && buyerAssets.usd >= sellOrder.fullPrice) {
-            (Some(sellOrder), remainSellOrders ::: filteredSellOrders)
-          } else {
-            iteration(remainSellOrders, sellOrder :: filteredSellOrders)
-          }
-        } else {
-          iteration(remainSellOrders, sellOrder :: filteredSellOrders)
-        }
-      }
+    foundSellOrderAndOtherOrders match {
+      case Nil => (None, nonSuitableOrders)
+      case sellOrder :: otherOrders =>
+        (Some(sellOrder), nonSuitableOrders ::: otherOrders)
     }
-
-    val (orderResult, filteredSellOrders) = iteration(sellOrders, List())
-    (orderResult, filteredSellOrders.reverse) //TODO: perfomance issue
   }
 
   def addShareAndUsdToAsset(assets: Assets,

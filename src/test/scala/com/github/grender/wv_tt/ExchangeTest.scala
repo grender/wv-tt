@@ -96,7 +96,12 @@ class ExchangeTest extends FlatSpec with MustMatchers {
     val (Some(foundOrder), otherSellOrders) =
       Exchange.foundSellOrder(inputAssets, buyOrder, sellOrders)
     foundOrder.uuid.toString mustBe "00000000-0000-0000-0000-000000000002"
-    otherSellOrders.map(_.uuid.toString) should contain allOf ("00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000003", "00000000-0000-0000-0000-000000000004")
+    otherSellOrders.map(_.uuid.toString) should contain allElementsOf List(
+      "00000000-0000-0000-0000-000000000000",
+      "00000000-0000-0000-0000-000000000001",
+      "00000000-0000-0000-0000-000000000003",
+      "00000000-0000-0000-0000-000000000004"
+    )
   }
 
   it should "not found order and return" in {
